@@ -1,0 +1,14 @@
+# Секрети та конфіги
+.env
+credentials.json
+subscribers.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Cloudflare тунель
+*.exe
