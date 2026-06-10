@@ -9,7 +9,7 @@ import base64
 import logging
 from datetime import datetime, timezone, timedelta
 
-КИЄВ = timezone(timedelta(hours=3))
+KYIV_TZ = timezone(timedelta(hours=3))
 
 import anthropic
 import gspread
@@ -146,7 +146,7 @@ def додати_підписника_до_sheets(chat_id: int, ім_я: str) ->
         аркуш.append_row([
             chat_id,
             ім_я,
-            datetime.now(КИЇВ).strftime("%Y-%m-%d %H:%M:%S"),
+            datetime.now(KYIV_TZ).strftime("%Y-%m-%d %H:%M:%S"),
         ])
         logger.info(f"   ✅ Підписника {ім_я} ({chat_id}) додано до Sheets.")
         return True
@@ -215,7 +215,7 @@ def записати_в_google_sheets(дані: dict, аналіз: dict) -> Non
         ["Дата", "Ім'я", "Телефон", "Email", "Компанія", "AI-Summary", "Клас"]
     )
     аркуш.append_row([
-        datetime.now(КИЇВ).strftime("%Y-%m-%d %H:%M:%S"),
+        datetime.now(KYIV_TZ).strftime("%Y-%m-%d %H:%M:%S"),
         дані["name"], дані["phone"], дані["email"],
         дані["company"], аналіз.get("summary", "—"), аналіз.get("lead_class", "?"),
     ])
@@ -262,7 +262,7 @@ async def надіслати_всім_підписникам(дані: dict, а�
         f"{'─' * 30}\n"
         f"🤖 <b>AI-аналіз:</b>\n{резюме}\n"
         f"{'─' * 30}\n"
-        f"🕐 {datetime.now(КИЇВ).strftime('%d.%m.%Y о %H:%M')}"
+        f"🕐 {datetime.now(KYIV_TZ).strftime('%d.%m.%Y о %H:%M')}"
     )
 
     успішно = 0
@@ -290,7 +290,7 @@ async def перевірка_статусу():
     підписники = завантажити_підписників()
     return {
         "статус": "✅ Сервер працює",
-        "час": datetime.now(КИЇВ).isoformat(),
+        "час": datetime.now(KYIV_TZ).isoformat(),
         "підписників": len(підписники),
     }
 
