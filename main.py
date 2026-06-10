@@ -421,13 +421,13 @@ async def demo_сторінка():
       <span class="step">📬 Telegram</span>
     </div>
     <label>Ім'я</label>
-    <input id="name" value="   микита   ">
+    <input id="name" value="   test-name   ">
     <label>Телефон</label>
     <input id="phone" value=" +49 (123) 456-789  ">
     <label>Email</label>
-    <input id="email" value="MYKYTA.Y@EXAMPLE.COM">
+    <input id="email" value="TEST.EMAIL@GMAIL.COM">
     <label>Компанія</label>
-    <input id="company" value="Kims AI Solutions">
+    <input id="company" value="Test AI Solutions">
     <label>Повідомлення</label>
     <textarea id="message">Доброго дня! Ми хочемо впровадити ІІ-модуль у наші проекти для автоматизації модерації замовлень. Наш бюджет близько $5000, хочемо запуститися за місяць. Потрібна консультація.</textarea>
     <p class="hint">💡 Дані навмисно "брудні" — з зайвими пробілами і великими літерами. Система нормалізує їх автоматично.</p>
