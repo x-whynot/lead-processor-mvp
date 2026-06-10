@@ -283,7 +283,7 @@ app = FastAPI(
 )
 
 
-@app.get("/", tags=["Статус"])
+@app.get("/status", tags=["Статус"])
 async def перевірка_статусу():
     підписники = завантажити_підписників()
     return {
@@ -361,3 +361,130 @@ async def обробити_заявку(заявка: Заявка):
 
     logger.info("🎉 Заявку успішно оброблено!")
     return {"статус": "успіх", "нормалізовані_дані": нормалізовані, "ai_аналіз": аналіз}
+
+
+@app.get("/", tags=["Демо"])
+async def demo_сторінка():
+    """Інтерактивна демо-сторінка для тестування MVP."""
+    from fastapi.responses import HTMLResponse
+    return HTMLResponse(content="""
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MVP — Обробник Лідів</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .card { background: #1e293b; border-radius: 16px; padding: 40px; width: 100%; max-width: 600px; box-shadow: 0 25px 50px rgba(0,0,0,0.4); }
+    h1 { font-size: 24px; font-weight: 700; margin-bottom: 4px; color: #f1f5f9; }
+    .subtitle { font-size: 14px; color: #64748b; margin-bottom: 32px; }
+    .pipeline { display: flex; align-items: center; gap: 8px; margin-bottom: 32px; flex-wrap: wrap; }
+    .step { background: #0f172a; border-radius: 8px; padding: 8px 14px; font-size: 12px; color: #94a3b8; border: 1px solid #334155; }
+    .arrow { color: #334155; font-size: 16px; }
+    label { display: block; font-size: 13px; font-weight: 500; color: #94a3b8; margin-bottom: 6px; margin-top: 16px; }
+    input, textarea { width: 100%; background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 10px 14px; color: #f1f5f9; font-size: 14px; outline: none; transition: border-color 0.2s; font-family: inherit; }
+    input:focus, textarea:focus { border-color: #6366f1; }
+    textarea { resize: vertical; min-height: 100px; }
+    button { width: 100%; margin-top: 24px; padding: 14px; background: #6366f1; border: none; border-radius: 10px; color: white; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+    button:hover { background: #4f46e5; }
+    button:disabled { background: #334155; color: #64748b; cursor: not-allowed; }
+    .result { margin-top: 24px; border-radius: 10px; padding: 20px; display: none; }
+    .result.success { background: #0d2818; border: 1px solid #16a34a; }
+    .result.error { background: #2d0f0f; border: 1px solid #dc2626; }
+    .result-title { font-size: 15px; font-weight: 600; margin-bottom: 12px; }
+    .result.success .result-title { color: #4ade80; }
+    .result.error .result-title { color: #f87171; }
+    .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 700; margin-bottom: 12px; }
+    .badge-A { background: #431407; color: #fb923c; }
+    .badge-B { background: #0c1a2e; color: #60a5fa; }
+    .badge-C { background: #1a1a2e; color: #a78bfa; }
+    .result-row { display: flex; gap: 8px; margin-bottom: 6px; font-size: 13px; }
+    .result-label { color: #64748b; min-width: 90px; }
+    .result-value { color: #e2e8f0; }
+    .summary-box { margin-top: 12px; padding: 12px; background: #0f172a; border-radius: 8px; font-size: 13px; color: #94a3b8; line-height: 1.6; }
+    .loader { display: inline-block; width: 16px; height: 16px; border: 2px solid #ffffff40; border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 8px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .hint { font-size: 12px; color: #475569; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🚀 MVP — Обробник Лідів</h1>
+    <p class="subtitle">Тестова форма заявки з лендингу</p>
+    <div class="pipeline">
+      <span class="step">📥 Заявка</span><span class="arrow">→</span>
+      <span class="step">🔧 Нормалізація</span><span class="arrow">→</span>
+      <span class="step">🤖 Claude AI</span><span class="arrow">→</span>
+      <span class="step">📊 Google Sheets</span><span class="arrow">→</span>
+      <span class="step">📬 Telegram</span>
+    </div>
+    <label>Ім'я</label>
+    <input id="name" value="   микита   ">
+    <label>Телефон</label>
+    <input id="phone" value=" +49 (123) 456-789  ">
+    <label>Email</label>
+    <input id="email" value="MYKYTA.Y@EXAMPLE.COM">
+    <label>Компанія</label>
+    <input id="company" value="Kims AI Solutions">
+    <label>Повідомлення</label>
+    <textarea id="message">Доброго дня! Ми хочемо впровадити ІІ-модуль у наші проекти для автоматизації модерації замовлень. Наш бюджет близько $5000, хочемо запуститися за місяць. Потрібна консультація.</textarea>
+    <p class="hint">💡 Дані навмисно "брудні" — з зайвими пробілами і великими літерами. Система нормалізує їх автоматично.</p>
+    <button id="btn" onclick="sendLead()">Відправити заявку</button>
+    <div class="result" id="result"></div>
+  </div>
+  <script>
+    async function sendLead() {
+      const btn = document.getElementById('btn');
+      const result = document.getElementById('result');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="loader"></span>Обробляємо...';
+      result.style.display = 'none';
+      const payload = {
+        name: document.getElementById('name').value,
+        phone: document.getElementById('phone').value,
+        email: document.getElementById('email').value,
+        company: document.getElementById('company').value,
+        message: document.getElementById('message').value,
+      };
+      try {
+        const resp = await fetch('/api/v1/leads', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await resp.json();
+        if (resp.ok) {
+          const d = data['нормалізовані_дані'];
+          const ai = data['ai_аналіз'];
+          const cls = ai.lead_class;
+          const icons = { A: '🔥', B: '🌤', C: '🧊' };
+          const labels = { A: 'Гарячий лід', B: 'Середній лід', C: 'Холодний лід' };
+          result.className = 'result success';
+          result.innerHTML = `
+            <div class="result-title">✅ Заявку успішно оброблено!</div>
+            <span class="badge badge-${cls}">${icons[cls] || '❓'} Клас ${cls} — ${labels[cls] || ''}</span>
+            <div class="result-row"><span class="result-label">👤 Ім'я:</span><span class="result-value">${d.name}</span></div>
+            <div class="result-row"><span class="result-label">📞 Телефон:</span><span class="result-value">${d.phone}</span></div>
+            <div class="result-row"><span class="result-label">📧 Email:</span><span class="result-value">${d.email}</span></div>
+            <div class="result-row"><span class="result-label">🏢 Компанія:</span><span class="result-value">${d.company || '—'}</span></div>
+            <div class="summary-box">🤖 <b>AI-аналіз:</b><br>${ai.summary}</div>
+            <div class="result-row" style="margin-top:12px;font-size:12px;color:#475569">
+              📊 Записано в Google Sheets &nbsp;·&nbsp; 📬 Надіслано в Telegram
+            </div>`;
+        } else {
+          result.className = 'result error';
+          result.innerHTML = `<div class="result-title">❌ Помилка</div><div style="font-size:13px;color:#fca5a5">${JSON.stringify(data.detail || data)}</div>`;
+        }
+      } catch(e) {
+        result.className = 'result error';
+        result.innerHTML = `<div class="result-title">❌ Помилка з'єднання</div><div style="font-size:13px;color:#fca5a5">${e.message}</div>`;
+      }
+      result.style.display = 'block';
+      btn.disabled = false;
+      btn.innerHTML = 'Відправити заявку';
+    }
+  </script>
+</body>
+</html>""")
