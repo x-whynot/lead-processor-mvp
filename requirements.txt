@@ -1,9 +1,10 @@
 fastapi
 uvicorn[standard]
 requests
-pydantic
+pydantic[email]
 anthropic
 python-dotenv
 gspread
 google-auth
 pydantic-settings
+email-validator

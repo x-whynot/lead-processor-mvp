@@ -17,7 +17,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request
 from google.oauth2.service_account import Credentials
 from google.oauth2 import service_account
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, EmailStr, field_validator
 from pydantic_settings import BaseSettings
 
 # ──────────────────────────────────────────────
@@ -61,7 +61,7 @@ class Заявка(BaseModel):
 
     name: str
     phone: str
-    email: str
+    email: EmailStr
     company: str = ""
     message: str
 
