@@ -1,20 +1,20 @@
 """
 test_send.py — Симулятор відправки "брудної" заявки з лендингу.
-Відправляє тестовий POST-запит на локальний FastAPI-сервер.
+Відправляє тестовий POST-запит на сервер.
 """
 
 import requests
 import json
 
-# URL нашого локального сервера
-URL = "http://localhost:8000/api/v1/leads"
+# URL сервера — можна змінити на localhost:8000 для локального запуску
+URL = "https://web-production-99eda.up.railway.app/api/v1/leads"
 
 # "Брудний" payload — як прийшло б з реального лендингу
 ТЕСТОВА_ЗАЯВКА = {
-    "name": "   микита   ",
+    "name": "   test-name   ",
     "phone": " +49 (123) 456-789  ",
-    "email": "MYKYTA.Y@EXAMPLE.COM",
-    "company": "Kims AI Solutions",
+    "email": "TEST.EMAIL@GMAIL.COM",
+    "company": "Test Company",
     "message": (
         "Доброго дня! Ми хочемо впровадити ІІ-модуль у наші проекти для автоматизації "
         "модерації замовлень. Наш бюджет близько $5000, хочемо запуститися за місяць. "
@@ -39,8 +39,7 @@ def надіслати_заявку() -> None:
         print(f"   Відповідь сервера:\n{json.dumps(відповідь.json(), ensure_ascii=False, indent=2)}")
 
     except requests.exceptions.ConnectionError:
-        print("\n❌ Помилка підключення! Переконайтесь, що сервер запущено:")
-        print("   uvicorn main:app --reload")
+        print("\n❌ Помилка підключення! Перевірте URL сервера.")
 
     except requests.exceptions.HTTPError as помилка:
         print(f"\n❌ HTTP-помилка: {помилка}")
