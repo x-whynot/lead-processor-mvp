@@ -6,3 +6,4 @@ anthropic
 python-dotenv
 gspread
 google-auth
+pydantic-settings
