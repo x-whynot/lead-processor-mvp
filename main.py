@@ -7,10 +7,9 @@ import re
 import json
 import base64
 import logging
-from datetime import datetime
-from zoneinfo import ZoneInfo
+from datetime import datetime, timezone, timedelta
 
-КИЄВ = ZoneInfo("Europe/Kyiv")
+КИЄВ = timezone(timedelta(hours=3))
 
 import anthropic
 import gspread
