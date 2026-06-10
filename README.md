@@ -68,10 +68,10 @@ POST /api/v1/leads  ←  заявка з лендингу (або test_send.py)
 
 ```json
 {
-  "name": "   микита   ",
-  "phone": " +49 (123) 456-789  ",
-  "email": "MYKYTA.Y@EXAMPLE.COM",
-  "company": "Test AI Solutions",
+  "name": "   андрій   ",
+  "phone": " +49 (157) 234-561  ",
+  "email": "ANDRII.K@EXAMPLE.COM",
+  "company": "Nova Digital Group",
   "message": "Доброго дня! Ми хочемо впровадити ІІ-модуль у наші проекти для автоматизації модерації замовлень. Наш бюджет близько $5000, хочемо запуститися за місяць. Потрібна консультація."
 }
 ```
@@ -79,9 +79,9 @@ POST /api/v1/leads  ←  заявка з лендингу (або test_send.py)
 Після обробки:
 ```json
 {
-  "name": "Микита",
-  "phone": "+49123456789",
-  "email": "oleg.k@example.com",
+  "name": "Андрій",
+  "phone": "+49157234561",
+  "email": "andrii.k@example.com",
   "lead_class": "A",
   "summary": "Клієнт хоче впровадити AI-модуль для автоматизації модерації замовлень. Бюджет $5000, термін — місяць."
 }
@@ -126,10 +126,10 @@ python test_send.py
 curl -X POST https://web-production-99eda.up.railway.app/api/v1/leads \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "   микита   ",
-    "phone": " +49 (123) 456-789  ",
-    "email": "MYKYTA.Y@EXAMPLE.COM",
-    "company": "Test AI Solutions",
+    "name": "   андрій   ",
+    "phone": " +49 (157) 234-561  ",
+    "email": "ANDRII.K@EXAMPLE.COM",
+    "company": "Nova Digital Group",
     "message": "Доброго дня! Ми хочемо впровадити ІІ-модуль у наші проекти для автоматизації модерації замовлень. Наш бюджет близько $5000, хочемо запуститися за місяць. Потрібна консультація."
   }'
 ```
@@ -203,10 +203,10 @@ uvicorn main:app --reload
 ```
 🔥 НОВИЙ ЛІД — КЛАС A 🔥
 ──────────────────────────────
-👤 Ім'я: Олег
-📞 Телефон: +49123456789
-📧 Email: oleg.k@example.com
-🏢 Компанія: Test AI Solutions
+👤 Ім'я: Андрій
+📞 Телефон: +49157234561
+📧 Email: andrii.k@example.com
+🏢 Компанія: Nova Digital Group
 ──────────────────────────────
 🤖 AI-аналіз:
 Клієнт хоче впровадити AI-модуль для автоматизації
