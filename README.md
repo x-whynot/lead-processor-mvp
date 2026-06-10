@@ -71,7 +71,7 @@ POST /api/v1/leads  ←  заявка з лендингу (або test_send.py)
   "name": "   микита   ",
   "phone": " +49 (123) 456-789  ",
   "email": "MYKYTA.Y@EXAMPLE.COM",
-  "company": "Kims AI Solutions",
+  "company": "Test AI Solutions",
   "message": "Доброго дня! Ми хочемо впровадити ІІ-модуль у наші проекти для автоматизації модерації замовлень. Наш бюджет близько $5000, хочемо запуститися за місяць. Потрібна консультація."
 }
 ```
@@ -81,7 +81,7 @@ POST /api/v1/leads  ←  заявка з лендингу (або test_send.py)
 {
   "name": "Микита",
   "phone": "+49123456789",
-  "email": "mykyta.y@example.com",
+  "email": "oleg.k@example.com",
   "lead_class": "A",
   "summary": "Клієнт хоче впровадити AI-модуль для автоматизації модерації замовлень. Бюджет $5000, термін — місяць."
 }
@@ -129,7 +129,7 @@ curl -X POST https://web-production-99eda.up.railway.app/api/v1/leads \
     "name": "   микита   ",
     "phone": " +49 (123) 456-789  ",
     "email": "MYKYTA.Y@EXAMPLE.COM",
-    "company": "Kims AI Solutions",
+    "company": "Test AI Solutions",
     "message": "Доброго дня! Ми хочемо впровадити ІІ-модуль у наші проекти для автоматизації модерації замовлень. Наш бюджет близько $5000, хочемо запуститися за місяць. Потрібна консультація."
   }'
 ```
@@ -203,10 +203,10 @@ uvicorn main:app --reload
 ```
 🔥 НОВИЙ ЛІД — КЛАС A 🔥
 ──────────────────────────────
-👤 Ім'я: Микита
+👤 Ім'я: Олег
 📞 Телефон: +49123456789
-📧 Email: mykyta.y@example.com
-🏢 Компанія: Kims AI Solutions
+📧 Email: oleg.k@example.com
+🏢 Компанія: Test AI Solutions
 ──────────────────────────────
 🤖 AI-аналіз:
 Клієнт хоче впровадити AI-модуль для автоматизації
