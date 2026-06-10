@@ -5,6 +5,7 @@ main.py — MVP-сервер обробки лідів з лендингу.
 
 import re
 import json
+import base64
 import logging
 from datetime import datetime
 from pathlib import Path
@@ -15,6 +16,7 @@ import httpx
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request
 from google.oauth2.service_account import Credentials
+from google.oauth2 import service_account
 from pydantic import BaseModel, field_validator
 from pydantic_settings import BaseSettings
 
@@ -31,7 +33,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Файл для збереження підписників
 ФАЙЛ_ПІДПИСНИКІВ = Path("subscribers.json")
 
 
@@ -41,6 +42,7 @@ class Налаштування(BaseSettings):
     anthropic_api_key: str
     telegram_bot_token: str
     google_sheets_spreadsheet_id: str
+    google_credentials_base64: str = ""  # base64 JSON для Railway
 
     class Config:
         env_file = ".env"
@@ -100,6 +102,33 @@ def додати_підписника(chat_id: int) -> bool:
     підписники.add(chat_id)
     зберегти_підписників(підписники)
     return якщо_новий
+
+
+# ──────────────────────────────────────────────
+# GOOGLE SHEETS — авторизація
+# ──────────────────────────────────────────────
+
+SCOPES = [
+    "https://spreadsheets.google.com/feeds",
+    "https://www.googleapis.com/auth/drive",
+]
+
+
+def отримати_google_credentials() -> Credentials:
+    """
+    Повертає Google Credentials.
+    Пріоритет:
+      1. Змінна середовища GOOGLE_CREDENTIALS_BASE64 (Railway/продакшн)
+      2. Файл credentials.json (локальна розробка)
+    """
+    if налаштування.google_credentials_base64:
+        logger.info("   Використовуємо credentials з змінної середовища.")
+        json_bytes = base64.b64decode(налаштування.google_credentials_base64)
+        info = json.loads(json_bytes)
+        return service_account.Credentials.from_service_account_info(info, scopes=SCOPES)
+    else:
+        logger.info("   Використовуємо credentials з файлу credentials.json.")
+        return Credentials.from_service_account_file("credentials.json", scopes=SCOPES)
 
 
 # ──────────────────────────────────────────────
@@ -169,13 +198,7 @@ def записати_в_google_sheets(дані: dict, аналіз: dict) -> Non
     """Додає новий рядок із даними ліда до Google Sheets."""
     logger.info("📊 Записуємо дані в Google Sheets...")
 
-    облікові_дані = Credentials.from_service_account_file(
-        "credentials.json",
-        scopes=[
-            "https://spreadsheets.google.com/feeds",
-            "https://www.googleapis.com/auth/drive",
-        ],
-    )
+    облікові_дані = отримати_google_credentials()
     клієнт_sheets = gspread.authorize(облікові_дані)
     таблиця = клієнт_sheets.open_by_key(налаштування.google_sheets_spreadsheet_id)
     аркуш = таблиця.sheet1
@@ -271,12 +294,7 @@ async def перевірка_статусу():
 
 @app.post("/telegram/webhook", tags=["Telegram"])
 async def telegram_webhook(запит: Request):
-    """
-    Вебхук для Telegram.
-    Коли користувач надсилає /start — реєструємо його chat_id як підписника.
-    Налаштування вебхука:
-      https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://ВАШ_ДОМЕН/telegram/webhook
-    """
+    """Вебхук для Telegram. /start — реєструє підписника."""
     тіло = await запит.json()
     logger.info(f"📩 Telegram webhook: {json.dumps(тіло, ensure_ascii=False)}")
 
@@ -292,21 +310,15 @@ async def telegram_webhook(запит: Request):
     if текст.strip() == "/start":
         є_новий = додати_підписника(chat_id)
 
-        if є_новий:
-            logger.info(f"✅ Новий підписник зареєстрований: {ім_я} (chat_id={chat_id})")
-            відповідь_текст = (
-                f"👋 Привіт, <b>{ім_я}</b>!\n\n"
-                f"✅ Ви успішно підписались на сповіщення про нові ліди.\n"
-                f"Щойно надійде нова заявка — ви отримаєте повідомлення першими. 🚀"
-            )
-        else:
-            logger.info(f"↩️ Повторний /start від {ім_я} (chat_id={chat_id})")
-            відповідь_текст = (
-                f"👋 {ім_я}, ви вже підписані!\n\n"
-                f"📬 Сповіщення про нові ліди будуть надходити автоматично."
-            )
+        відповідь_текст = (
+            f"👋 Привіт, <b>{ім_я}</b>!\n\n"
+            f"✅ Ви успішно підписались на сповіщення про нові ліди.\n"
+            f"Щойно надійде нова заявка — ви отримаєте повідомлення першими. 🚀"
+            if є_новий else
+            f"👋 {ім_я}, ви вже підписані!\n\n"
+            f"📬 Сповіщення про нові ліди будуть надходити автоматично."
+        )
 
-        # Відповідаємо користувачу
         url = f"https://api.telegram.org/bot{налаштування.telegram_bot_token}/sendMessage"
         async with httpx.AsyncClient() as клієнт:
             await клієнт.post(
@@ -320,43 +332,30 @@ async def telegram_webhook(запит: Request):
 
 @app.get("/subscribers", tags=["Telegram"])
 async def список_підписників():
-    """Показує поточний список підписників (для адміністратора)."""
+    """Показує поточний список підписників."""
     підписники = завантажити_підписників()
-    return {
-        "кількість": len(підписники),
-        "chat_ids": list(підписники),
-    }
+    return {"кількість": len(підписники), "chat_ids": list(підписники)}
 
 
 @app.post("/api/v1/leads", tags=["Ліди"])
 async def обробити_заявку(заявка: Заявка):
-    """
-    Головний ендпоінт обробки ліда:
-    1. Нормалізація даних
-    2. AI-аналіз через Claude
-    3. Запис у Google Sheets
-    4. Розсилка сповіщень усім підписникам Telegram
-    """
+    """Головний ендпоінт: нормалізація → Claude AI → Google Sheets → Telegram."""
     logger.info(f"📥 Отримано нову заявку від: {заявка.name} ({заявка.email})")
 
-    # Крок 1: Нормалізація
     нормалізовані = нормалізувати_заявку(заявка)
     logger.info(f"   Нормалізовані дані: {нормалізовані}")
 
-    # Крок 2: Аналіз через Claude
     try:
         аналіз = await проаналізувати_через_claude(нормалізовані["message"])
     except Exception as помилка:
         logger.error(f"❌ Помилка Claude API: {помилка}")
         raise HTTPException(status_code=502, detail=f"Помилка AI-аналізу: {помилка}")
 
-    # Крок 3: Запис у Google Sheets
     try:
         записати_в_google_sheets(нормалізовані, аналіз)
     except Exception as помилка:
         logger.warning(f"⚠️ Не вдалося записати в Google Sheets: {помилка}")
 
-    # Крок 4: Розсилка всім підписникам
     try:
         await надіслати_всім_підписникам(нормалізовані, аналіз)
     except Exception as помилка:
