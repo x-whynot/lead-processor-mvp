@@ -308,27 +308,80 @@ async def telegram_webhook(запит: Request):
     if not chat_id:
         return {"ok": True}
 
+    tg_url = f"https://api.telegram.org/bot{налаштування.telegram_bot_token}"
+
+    async def відповісти(текст_відповіді: str):
+        async with httpx.AsyncClient() as кл:
+            await кл.post(
+                f"{tg_url}/sendMessage",
+                json={"chat_id": chat_id, "text": текст_відповіді, "parse_mode": "HTML"},
+                timeout=30,
+            )
+
     if текст.strip() == "/start":
         є_новий = додати_підписника_до_sheets(chat_id, ім_я)
-
         відповідь_текст = (
             f"👋 Привіт, <b>{ім_я}</b>!\n\n"
             f"✅ Ви успішно підписались на сповіщення про нові ліди.\n"
-            f"Щойно надійде нова заявка — ви отримаєте повідомлення першими. 🚀"
+            f"Щойно надійде нова заявка — ви отримаєте повідомлення першими. 🚀\n\n"
+            f"📋 Доступні команди:\n"
+            f"/stats — статистика лідів\n"
+            f"/export — вигрузити всі ліди у CSV"
             if є_новий else
             f"👋 {ім_я}, ви вже підписані!\n\n"
-            f"📬 Сповіщення про нові ліди будуть надходити автоматично."
+            f"📋 Доступні команди:\n"
+            f"/stats — статистика лідів\n"
+            f"/export — вигрузити всі ліди у CSV"
         )
+        await відповісти(відповідь_текст)
 
-        url = f"https://api.telegram.org/bot{налаштування.telegram_bot_token}/sendMessage"
-        async with httpx.AsyncClient() as клієнт:
-            await клієнт.post(
-                url,
-                json={"chat_id": chat_id, "text": відповідь_текст, "parse_mode": "HTML"},
-                timeout=10,
+    elif текст.strip() == "/stats":
+        try:
+            таблиця = отримати_таблицю()
+            аркуш = таблиця.worksheet(НАЗВА_АРКУШУ_ЛІДІВ)
+            записи = аркуш.get_all_records()
+            всього = len(записи)
+            a = sum(1 for р in записи if р.get("Клас") == "A")
+            b = sum(1 for р in записи if р.get("Клас") == "B")
+            c = sum(1 for р in записи if р.get("Клас") == "C")
+            текст_статистики = (
+                f"📊 <b>Статистика лідів</b>\n"
+                f"{'─' * 25}\n"
+                f"📥 Всього заявок: <b>{всього}</b>\n\n"
+                f"🔥 Клас A (гарячі): <b>{a}</b>\n"
+                f"🌤 Клас B (середні): <b>{b}</b>\n"
+                f"🧊 Клас C (холодні): <b>{c}</b>"
             )
+        except Exception as e:
+            текст_статистики = f"❌ Не вдалося отримати статистику: {e}"
+        await відповісти(текст_статистики)
+
+    elif текст.strip() == "/export":
+        try:
+            таблиця = отримати_таблицю()
+            аркуш = таблиця.worksheet(НАЗВА_АРКУШУ_ЛІДІВ)
+            записи = аркуш.get_all_records()
+            if not записи:
+                await відповісти("📭 Лідів ще немає.")
+            else:
+                import csv, io
+                буфер = io.StringIO()
+                writer = csv.DictWriter(буфер, fieldnames=записи[0].keys())
+                writer.writeheader()
+                writer.writerows(записи)
+                csv_bytes = буфер.getvalue().encode("utf-8-sig")
+                async with httpx.AsyncClient() as кл:
+                    await кл.post(
+                        f"{tg_url}/sendDocument",
+                        data={"chat_id": chat_id, "caption": f"📊 Ліди — {len(записи)} записів"},
+                        files={"document": ("leads.csv", csv_bytes, "text/csv")},
+                        timeout=30,
+                    )
+        except Exception as e:
+            await відповісти(f"❌ Помилка експорту: {e}")
 
     return {"ok": True}
+
 
 
 @app.get("/subscribers", tags=["Telegram"])
@@ -429,7 +482,7 @@ async def demo_сторінка():
     <label>Email</label>
     <input id="email" value="TEST.EMAIL@GMAIL.COM">
     <label>Компанія</label>
-    <input id="company" value=" Test AI Solutions">
+    <input id="company" value="Kims AI Solutions">
     <label>Повідомлення</label>
     <textarea id="message">Доброго дня! Ми хочемо впровадити ІІ-модуль у наші проекти для автоматизації модерації замовлень. Наш бюджет близько $5000, хочемо запуститися за місяць. Потрібна консультація.</textarea>
     <p class="hint">💡 Дані навмисно "брудні" — з зайвими пробілами і великими літерами. Система нормалізує їх автоматично.</p>
